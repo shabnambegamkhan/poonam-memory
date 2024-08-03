@@ -1,0 +1,59 @@
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+    background-image: url(bg5.jpg);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    overflow:hidden;
+    margin: 0;
+}
+
+.container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+
+.fly {
+    transform: translateY(-100vh);
+}
+
+
+#flyButton {
+    position: relative; 
+    padding: 5px 10px;
+    font-size: 10px;
+    top: 140px;
+    right: 40px;
+    cursor: pointer;
+    z-index: 1;             /* button go  on top */
+    border: 2px solid #fff;
+    color: white;
+    background-color: rgb(19, 168, 161); 
+    /* background-image: url('front2.jpg'); Optional: If you want to add a background image to the button itself */
+    border-radius: 10px;
+    display: flex; 
+    align-items: center; /* Center the butterfly vertically */
+    justify-content: center; 
+}
+
+.Butterfly {
+    position: absolute;                 /* Absolute position to overlap  */
+    top: px; 
+    left: 40%; 
+    right: 30%;
+    background-image: url("unique.gif");
+    background-position: 3px;
+    background-size: cover;
+    border-radius: 20px;
+    width: 130px;                          /* Adjust size to fit inside button */
+    height: 50px;                          /* Adjust size to fit inside button */
+    transition: transform 1s ease-in-out;
+}

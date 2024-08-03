@@ -1,0 +1,265 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Game</title>
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        /* Style for the entire body */
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-image: url(ss6.gif);
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-position: center;
+            font-size: 40px;
+            font-style: initial;
+            color: #be0f26;
+        }
+
+        /* Style for the game board container */
+        #gameBoard {
+            display: grid;
+            grid-template-columns: repeat(4, 100px); /* 4 boxes per row */
+            gap: 20px;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        /* Style for each card */
+        .card {
+            width: 100px;
+            height: 100px;
+            background-color: rgb(173, 21, 179);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            border-radius: 20px;
+            border-top-left-radius: 0px;
+            border-color: rgb(166, 255, 0);
+            border-width: 4px;
+            transition: transform 0.3s;
+            border-style: groove;
+        }
+
+        /* Style for the image inside each card */
+        .card img {
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+        }
+
+        /* Style for flipped cards */
+        .flipped {
+            transform: rotateY(180deg);
+        }
+
+        /* Style for the restart button */
+        #restartButton {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 20px;
+            background-color: #13dd0c;
+            color: rgb(17, 14, 14);
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        /* Hover effect for the restart button */
+        #restartButton:hover {
+            background-color: #e61258;
+        }
+
+        /* Style for the mute button */
+        #muteButton {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 20px;
+            background-color: #d30c05;
+            color: rgb(5, 1, 4);
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #muteButton:hover {
+            background-color: #f0cd05;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #congratsPopup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 1000;
+        }
+
+        #congratsPopup img {
+            width: auto;
+            height: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <audio id="backgroundMusic" src="pro.mp3" loop></audio>
+    <div id="timer">Time: 0s</div>
+    <div id="gameBoard"></div>
+    <button id="restartButton">🔃 Restart</button>
+    <button id="muteButton">🔇 Mute/ 🔊 Unmute</button>
+
+    <div id="congratsPopup" class="hidden">
+        <h2>Congratulations!</h2>
+        <img src="fir.gif" alt="Congratulations">
+        <audio id="firsound" loop>
+            <source src="fireworks.mp3" type="audio/mpeg">
+        </audio>
+        <p>Congratulations! You found all the matches!</p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const cardArray = [
+                { img: "m16.avif" },
+                { img: "m17.avif" },
+                { img: "m18.gif" },
+                { img: "m19.gif" },
+                { img: "m21.gif" },
+                { img: "m22.gif" },
+                { img: "m23.gif" },
+                { img: "m24.gif" },
+                { img: "m32.gif" },
+                { img: "m33.gif" },
+                { img: "m34.gif" },
+                { img: "m35.gif" },
+            ];
+
+            const gameArray = cardArray.concat(cardArray);
+            const gameBoard = document.querySelector('#gameBoard');
+            const restartButton = document.querySelector('#restartButton');
+            const muteButton = document.querySelector('#muteButton');
+            const backgroundMusic = document.querySelector('#backgroundMusic');
+            const congratsPopup = document.querySelector('#congratsPopup');
+            const timerDisplay = document.querySelector('#timer');
+            let cardsChosen = [];
+            let cardsChosenId = [];
+            let cardsWon = [];
+            let timer;
+            let time = 0;
+
+            function startTimer() {
+                timer = setInterval(() => {
+                    time++;
+                    timerDisplay.textContent = `Time: ${time}s`;
+                }, 1000);
+            }
+
+            function stopTimer() {
+                clearInterval(timer);
+            }
+
+            function resetTimer() {
+                time = 0;
+                timerDisplay.textContent = `Time: 0s`;
+            }
+
+            function createBoard() {
+                gameArray.sort(() => 0.5 - Math.random());
+                gameBoard.innerHTML = '';
+                gameArray.forEach((card, index) => {
+                    const cardElement = document.createElement('div');
+                    cardElement.setAttribute('class', 'card');
+                    cardElement.setAttribute('data-id', index);
+                    cardElement.addEventListener('click', flipCard);
+                    gameBoard.appendChild(cardElement);
+                });
+            }
+
+            function flipCard() {
+                const cardId = this.getAttribute('data-id');
+                cardsChosen.push(gameArray[cardId].img);
+                cardsChosenId.push(cardId);
+                this.innerHTML = `<img src="${gameArray[cardId].img}" alt="card front">`;
+                if (cardsChosen.length === 2) {
+                    setTimeout(checkForMatch, 500);
+                }
+            }
+
+            function checkForMatch() {
+                const cards = document.querySelectorAll('.card');
+                const optionOneId = cardsChosenId[0];
+                const optionTwoId = cardsChosenId[1];
+                if (cardsChosen[0] === cardsChosen[1] && optionOneId !== optionTwoId) {
+                    cardsWon.push(cardsChosen);
+                    cards[optionOneId].removeEventListener('click', flipCard);
+                    cards[optionTwoId].removeEventListener('click', flipCard);
+                } else {
+                    cards[optionOneId].innerHTML = '';
+                    cards[optionTwoId].innerHTML = '';
+                }
+                cardsChosen = [];
+                cardsChosenId = [];
+                if (cardsWon.length === gameArray.length / 2) {
+                    stopTimer();
+                    showCongratulations();
+                }
+            }
+
+            function showCongratulations() {
+                congratsPopup.classList.remove('hidden');
+                setTimeout(() => {
+                    congratsPopup.classList.add('hidden');
+                }, 5000);
+            }
+
+            function restartGame() {
+                stopTimer();
+                resetTimer();
+                cardsChosen = [];
+                cardsChosenId = [];
+                cardsWon = [];
+                createBoard();
+                startTimer();
+            }
+
+            function toggleMute() {
+                if (backgroundMusic.paused) {
+                    backgroundMusic.play();
+                } else {
+                    backgroundMusic.pause();
+                }
+            }
+
+            restartButton.addEventListener('click', restartGame);
+            muteButton.addEventListener('click', toggleMute);
+
+            backgroundMusic.play();
+            createBoard();
+            startTimer();
+        });
+    </script>
+</body>
+
+</html>
